@@ -8,8 +8,11 @@ import (
 	"os"
 	"sync"
 	"time"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stefanKnott/mlbtakehome/pkg/models"
+
 )
 
 var teamSet map[int]string
@@ -17,30 +20,18 @@ var setLock *sync.RWMutex
 
 const (
 	teamsAPI = "https://statsapi.mlb.com/api/v1/teams?season=2021&sportId=1"
+	scheuldeAPIFmtStr = "https://statsapi.mlb.com/api/v1/schedule?date=%s&sportId=1&language=en"
 )
 
-type SpringLeagueTeam struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
 
-type Team struct {
-	SpringLeague SpringLeagueTeam `json:"springLeague"`
-	ID           int              `json:"id"`
-	Name         string           `json:"name"`
-}
-
-type TeamsResponse struct {
-	Copyright string `json:"copyright"`
-	Teams     []Team `json:"teams"`
-}
-
-func createSet(teamsResp TeamsResponse) {
+func createSet(teamsResp models.TeamsResponse) {
 	setLock.Lock()
 	for _, team := range teamsResp.Teams {
 		teamSet[team.ID] = team.Name
 	}
 	setLock.Unlock()
+
+	fmt.Printf("LEN OF SET: %+v\n", len(teamSet))
 }
 
 func InitTeamIdSet() {
@@ -60,7 +51,7 @@ func InitTeamIdSet() {
 			}
 			defer res.Body.Close()
 
-			var teamsResp TeamsResponse
+			var teamsResp models.TeamsResponse
 			b, err := ioutil.ReadAll(res.Body)
 			if err != nil {
 				fmt.Printf("error reading response body: %s\n", err)
@@ -87,8 +78,50 @@ func GetReadiness(c *gin.Context) {
 }
 
 func GetSchedule(c *gin.Context) {
-	// date := c.Query("date") // shortcut for c.Request.URL.Query().Get("lastname")
-	// teamId := c.Query("teamId")
+	date := c.Query("date")
+	teamId := c.Query("teamId")
+	id, err:= strconv.Atoi(teamId)
+	if err != nil{
+		c.JSON(http.StatusBadRequest, nil)
+		return
+	}
+
+	// validate requested team ID exists
+	setLock.RLock()
+	if teamSet[id] == "" {
+		c.JSON(http.StatusNotFound, nil)
+		return
+	}
+	setLock.RUnlock()
+
+	// validate timestamp
+	_, err = time.Parse("2006-01-02", date)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, nil)
+		return
+	}
+
+	// TODO hit schedules API
+	res, err := http.Get(fmt.Sprintf(scheuldeAPIFmtStr, date))
+	if err != nil {
+		fmt.Printf("error making http request: %s\n", err)
+		os.Exit(1)
+	}
+	defer res.Body.Close()
+
+	var schedResp models.ScheduleResponse
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("error reading response body: %s\n", err)
+	}
+
+	err = json.Unmarshal(b, &schedResp)
+	if err != nil {
+		fmt.Printf("error unmarshalling response: %s\n", err)
+	}
+
+	fmt.Printf("SCHEDULE RESPONSE: %+v\n", schedResp)
+
 
 	// c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "message": "Todo item created successfully!", "resourceId": todo.ID})
 }
