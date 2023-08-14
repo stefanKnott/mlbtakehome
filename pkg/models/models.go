@@ -56,6 +56,7 @@ type Game struct{
 	OfficialDate string `json:"officialDate"`
 	Status Status `json:"status"`
 	Teams Teams `json:"teams"`
+	DoubleHeader string `json:"doubleHeader"`
 }
 
 type Date struct{
