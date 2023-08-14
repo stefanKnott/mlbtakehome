@@ -27,6 +27,7 @@ const (
 
 func createSet(teamsResp models.TeamsResponse) {
 	setLock.Lock()
+	teamSet = make(map[int]string)
 	for _, team := range teamsResp.Teams {
 		teamSet[team.ID] = team.Name
 	}
@@ -41,10 +42,6 @@ func InitTeamIdSet() {
 
 	go func() {
 		for {
-			teamSet = make(map[int]string)
-			//getreq
-
-			//TODO: pull this out into its own function
 			res, err := http.Get(teamsAPI)
 			if err != nil {
 				fmt.Printf("error making http request: %s\n", err)
@@ -83,26 +80,55 @@ func isNotMyTeam(myTeam, team string) bool{
 	return strings.ToLower(myTeam) != strings.ToLower(team)
 }
 
-func sortDoubleHeaders(games []models.Game) {
-	var tmp models.Game
+func sortDoubleHeaders(games []models.Game) ([]models.Game, error){
+	/*
+		cases:
+			1) both games in future or past -- earlier game first
+			if either game is live:
+				2) if earlier game is live -- earlier game first
+				3) if later game is live -- earlier game second, later game first
+	*/
 
-	// single admission
-	if games[0].DoubleHeader == "Y"{
-		// startTimeTBD should be true
-		if games[0].Status.StartTimeTBD{
-			// 0th position is second game
-			tmp = games[0]
-			games[0] = games[1]
-			games[1] = tmp
+	// we have a double header'
+	// TODO: get true first and second game
+	var chronoFirst, chronoSecond models.Game
+	zerothIdxGame := games[0] 
+	firstIdxGame := games[1] 
+	if zerothIdxGame.DoubleHeader == "Y" {
+		// traditional double header, startTimeTBD = true for second game
+		if firstIdxGame.Status.StartTimeTBD {
+			chronoFirst = zerothIdxGame
+			chronoSecond = firstIdxGame
+		}else if zerothIdxGame.Status.StartTimeTBD{
+			chronoFirst = firstIdxGame
+			chronoSecond = zerothIdxGame
 		}
-		// ordering is already correct
-		return
+	}else if zerothIdxGame.DoubleHeader == "S"{
+		// split admission, compare gameDate
+		zt, err := time.Parse(time.RFC3339, zerothIdxGame.GameDate)
+		if err != nil{
+
+		}
+		ft, err := time.Parse(time.RFC3339, firstIdxGame.GameDate)
+		if err != nil{
+
+		}
+
+		if ft.After(zt){
+			chronoFirst = zerothIdxGame
+			chronoSecond = firstIdxGame
+		}else if zt.After(ft){
+			chronoFirst = firstIdxGame
+			chronoSecond = zerothIdxGame
+		}
 	}
 
-	// split admission
-	if games[0].DoubleHeader == "S"{
-
+	// ok we have our true chronological ordering
+	if chronoSecond.Status.AbstractGameCode == "L"{
+		return []models.Game{chronoSecond, chronoFirst}, nil
 	}
+
+	return []models.Game{chronoFirst, chronoSecond}, nil
 }
 
 func GetSchedule(c *gin.Context) {
