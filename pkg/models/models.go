@@ -46,16 +46,45 @@ type Status struct {
 	StartTimeTBD      bool   `json:"startTimeTBD"`
 }
 
+type Venue struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	Link string `json:"link"`
+}
+
+type Content struct {
+	Link string `json:"link"`
+}
+
 type Game struct {
-	GamePk       int    `json:"gamePk"`
-	Link         string `json:"string"`
-	GameType     string `json:"gameType"`
-	Season       string `json:"season"`
-	GameDate     string `json:"gameDate"`
-	OfficialDate string `json:"officialDate"`
-	Status       Status `json:"status"`
-	Teams        Teams  `json:"teams"`
-	DoubleHeader string `json:"doubleHeader"`
+	GamePk                 int     `json:"gamePk"`
+	Link                   string  `json:"string"`
+	GameType               string  `json:"gameType"`
+	Season                 string  `json:"season"`
+	GameDate               string  `json:"gameDate"`
+	OfficialDate           string  `json:"officialDate"`
+	Status                 Status  `json:"status"`
+	Teams                  Teams   `json:"teams"`
+	Venue                  Venue   `json:"venue"`
+	Content                Content `json:"content"`
+	IsTie                  bool    `json:"isTie"`
+	GameNumber             uint8   `json:"gameNumber"`
+	PublicFacing           bool    `json:"publicFacing"`
+	DoubleHeader           string  `json:"doubleHeader"`
+	GamedayType            string  `json:"gamedayType"`
+	Tiebreaker             string  `json:"tiebreaker"`
+	CalendarEventID        string  `json:"calendarEventID"`
+	SeasonDisplay          string  `json:"seasonDisplay"`
+	DayNight               string  `json:"dayNight"`
+	ScheduledInnings       uint8   `json:"scheduledInnings"`
+	ReverseHomeAwayStatus  bool    `json:"reverseHomeAwayStatus"`
+	InningBreakLength      uint16  `json:"inningBreakLength"`
+	GamesInSeries          uint8   `json:"gamesInSeries"`
+	SeriesGameNumber       uint8   `json:"seriesGameNumber"`
+	SeriesDescription      string  `json:"seriesDescription"`
+	RecordSource           string  `json:"recordSource"`
+	IfNecessary            string  `json:"ifNecessary"`
+	IfNecessaryDescription string  `json:"ifNecessaryDescription"`
 }
 
 type Date struct {
