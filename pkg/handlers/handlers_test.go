@@ -1,13 +1,12 @@
 package handlers
 
-
 import (
-    . "github.com/onsi/ginkgo/v2"
-    . "github.com/onsi/gomega"
 	"encoding/json"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"github.com/stefanKnott/mlbtakehome/pkg/models"
 	"os"
 	"sync"
-	"github.com/stefanKnott/mlbtakehome/pkg/models"
 )
 
 const (
@@ -1434,58 +1433,58 @@ var _ = Describe("Processing Schedule requests", Label("Schedule"), func() {
 	BeforeEach(func() {
 		setLock = new(sync.RWMutex)
 		err := json.Unmarshal([]byte(teamsAPIJSON), &teamResp)
-		if err != nil{
+		if err != nil {
 			os.Exit(1)
 		}
-		createSet(teamResp)
+		createTeamsSet(teamResp)
 	})
 
-    When("We parse /schedule query parameters", func() {
-        Context("and we receive a teamId that does not exist", func() {	
+	When("We parse /schedule query parameters", func() {
+		Context("and we receive a teamId that does not exist", func() {
 			It("should return an error", func(ctx SpecContext) {
 				_, err := parseQueryParameters(-1, "2021-04-01")
 				Expect(err).ToNot(BeNil())
-            })
+			})
 		})
-		Context("and we receive an invalid timestamp", func() {	
+		Context("and we receive an invalid timestamp", func() {
 			It("should return an error", func(ctx SpecContext) {
 				_, err := parseQueryParameters(141, "2021-04-q01")
 				Expect(err).ToNot(BeNil())
-            })
+			})
 		})
-		Context("and we receive valid query parameters", func() {	
+		Context("and we receive valid query parameters", func() {
 			It("should return a valid team name", func(ctx SpecContext) {
 				team, err := parseQueryParameters(141, "2021-04-01")
 				Expect(err).To(BeNil())
 				Expect(team).To(Equal("Toronto Blue Jays"))
-            })
+			})
 		})
 	})
 
-    When("We have a single admission double header", func() {
-        Context("and both games are in the future", func() {
+	When("We have a single admission double header", func() {
+		Context("and both games are in the future", func() {
 			game1 := models.Game{
 				GameDate: "2024-04-01T20:00:00Z",
 				Status: models.Status{
 					AbstractGameState: "Preview",
-					AbstractGameCode: "P",
-					CodedGameState: "S",
-					DetailedState: "Scheduled",
-					StatusCode: "S",
-					StartTimeTBD: false,
+					AbstractGameCode:  "P",
+					CodedGameState:    "S",
+					DetailedState:     "Scheduled",
+					StatusCode:        "S",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "Y",
@@ -1495,61 +1494,61 @@ var _ = Describe("Processing Schedule requests", Label("Schedule"), func() {
 				GameDate: "2024-04-01T20:00:00Z",
 				Status: models.Status{
 					AbstractGameState: "Preview",
-					AbstractGameCode: "P",
-					CodedGameState: "S",
-					DetailedState: "Scheduled",
-					StatusCode: "S",
-					StartTimeTBD: true,
+					AbstractGameCode:  "P",
+					CodedGameState:    "S",
+					DetailedState:     "Scheduled",
+					StatusCode:        "S",
+					StartTimeTBD:      true,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "Y",
 			}
 
-            It("the games should be chronologically ordered", func(ctx SpecContext) {
+			It("the games should be chronologically ordered", func(ctx SpecContext) {
 				sorted, err := sortDoubleHeaders([]models.Game{game2, game1})
 				Expect(err).To(BeNil())
 				Expect(sorted[0]).To(Equal(game1))
 				Expect(sorted[1]).To(Equal(game2))
-            })
-        })
+			})
+		})
 
 		Context("and both games are in the past", func() {
 			game1 := models.Game{
-				GameDate: "2023-04-01T20:00:00Z",
+				GameDate:     "2023-04-01T20:00:00Z",
 				OfficialDate: "2024-04-01",
 				Status: models.Status{
 					AbstractGameState: "Final",
-					AbstractGameCode: "F",
-					CodedGameState: "F",
-					DetailedState: "Final",
-					StatusCode: "F",
-					StartTimeTBD: false,
+					AbstractGameCode:  "F",
+					CodedGameState:    "F",
+					DetailedState:     "Final",
+					StatusCode:        "F",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "Y",
@@ -1559,60 +1558,60 @@ var _ = Describe("Processing Schedule requests", Label("Schedule"), func() {
 				OfficialDate: "2023-04-01",
 				Status: models.Status{
 					AbstractGameState: "Final",
-					AbstractGameCode: "F",
-					CodedGameState: "F",
-					DetailedState: "Final",
-					StatusCode: "F",
-					StartTimeTBD: true,
+					AbstractGameCode:  "F",
+					CodedGameState:    "F",
+					DetailedState:     "Final",
+					StatusCode:        "F",
+					StartTimeTBD:      true,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "Y",
 			}
-            It("the games should be chronologically ordered", func(ctx SpecContext) {
+			It("the games should be chronologically ordered", func(ctx SpecContext) {
 				sorted, err := sortDoubleHeaders([]models.Game{game2, game1})
 				Expect(err).To(BeNil())
 				Expect(sorted[0]).To(Equal(game1))
 				Expect(sorted[1]).To(Equal(game2))
-            })
-        })
+			})
+		})
 
-        Context("the first game is live", func() {
+		Context("the first game is live", func() {
 			game1 := models.Game{
-				GameDate: "2023-04-01T20:00:00Z",
+				GameDate:     "2023-04-01T20:00:00Z",
 				OfficialDate: "2024-04-01",
 				Status: models.Status{
 					AbstractGameState: "Live",
-					AbstractGameCode: "L",
-					CodedGameState: "L",
-					DetailedState: "Live",
-					StatusCode: "L",
-					StartTimeTBD: false,
+					AbstractGameCode:  "L",
+					CodedGameState:    "L",
+					DetailedState:     "Live",
+					StatusCode:        "L",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "Y",
@@ -1622,60 +1621,60 @@ var _ = Describe("Processing Schedule requests", Label("Schedule"), func() {
 				OfficialDate: "2023-04-01",
 				Status: models.Status{
 					AbstractGameState: "Preview",
-					AbstractGameCode: "P",
-					CodedGameState: "S",
-					DetailedState: "Scheduled",
-					StatusCode: "S",
-					StartTimeTBD: true,
+					AbstractGameCode:  "P",
+					CodedGameState:    "S",
+					DetailedState:     "Scheduled",
+					StatusCode:        "S",
+					StartTimeTBD:      true,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "Y",
 			}
-            It("the games should be chronologically ordered", func(ctx SpecContext) {
+			It("the games should be chronologically ordered", func(ctx SpecContext) {
 				sorted, err := sortDoubleHeaders([]models.Game{game2, game1})
 				Expect(err).To(BeNil())
 				Expect(sorted[0]).To(Equal(game1))
 				Expect(sorted[1]).To(Equal(game2))
-            })
-        })
+			})
+		})
 
 		Context("and the second game is live", func() {
 			game1 := models.Game{
-				GameDate: "2024-04-01T20:00:00Z",
+				GameDate:     "2024-04-01T20:00:00Z",
 				OfficialDate: "2024-04-01",
 				Status: models.Status{
 					AbstractGameState: "Final",
-					AbstractGameCode: "F",
-					CodedGameState: "F",
-					DetailedState: "Final",
-					StatusCode: "F",
-					StartTimeTBD: false,
+					AbstractGameCode:  "F",
+					CodedGameState:    "F",
+					DetailedState:     "Final",
+					StatusCode:        "F",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "Y",
@@ -1685,62 +1684,62 @@ var _ = Describe("Processing Schedule requests", Label("Schedule"), func() {
 				OfficialDate: "2024-04-01",
 				Status: models.Status{
 					AbstractGameState: "Live",
-					AbstractGameCode: "L",
-					CodedGameState: "L",
-					DetailedState: "Live",
-					StatusCode: "L",
-					StartTimeTBD: true,
+					AbstractGameCode:  "L",
+					CodedGameState:    "L",
+					DetailedState:     "Live",
+					StatusCode:        "L",
+					StartTimeTBD:      true,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "Y",
 			}
 
-            It("the second, live, game should be listed first", func(ctx SpecContext) {
+			It("the second, live, game should be listed first", func(ctx SpecContext) {
 				sorted, err := sortDoubleHeaders([]models.Game{game1, game2})
 				Expect(err).To(BeNil())
 				Expect(sorted[0]).To(Equal(game2))
 				Expect(sorted[1]).To(Equal(game1))
-            })
-        })
+			})
+		})
 	})
 
 	When("We have a split admission double header", func() {
-        Context("and both games are in the future", func() {
+		Context("and both games are in the future", func() {
 			game1 := models.Game{
 				GameDate: "2024-04-01T20:00:00Z",
 				Status: models.Status{
 					AbstractGameState: "Preview",
-					AbstractGameCode: "P",
-					CodedGameState: "S",
-					DetailedState: "Scheduled",
-					StatusCode: "S",
-					StartTimeTBD: false,
+					AbstractGameCode:  "P",
+					CodedGameState:    "S",
+					DetailedState:     "Scheduled",
+					StatusCode:        "S",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "S",
@@ -1750,228 +1749,228 @@ var _ = Describe("Processing Schedule requests", Label("Schedule"), func() {
 				GameDate: "2024-04-01T23:00:00Z",
 				Status: models.Status{
 					AbstractGameState: "Preview",
-					AbstractGameCode: "P",
-					CodedGameState: "S",
-					DetailedState: "Scheduled",
-					StatusCode: "S",
-					StartTimeTBD: false,
+					AbstractGameCode:  "P",
+					CodedGameState:    "S",
+					DetailedState:     "Scheduled",
+					StatusCode:        "S",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "S",
 			}
 
-            It("the games should be chronologically ordered", func(ctx SpecContext) {
+			It("the games should be chronologically ordered", func(ctx SpecContext) {
 				sorted, err := sortDoubleHeaders([]models.Game{game2, game1})
 				Expect(err).To(BeNil())
 				Expect(sorted[0]).To(Equal(game1))
 				Expect(sorted[1]).To(Equal(game2))
-            })
-        })
+			})
+		})
 
 		Context("and both games are in the past", func() {
 			game1 := models.Game{
-				GameDate: "2023-04-01T20:00:00Z",
+				GameDate:     "2023-04-01T20:00:00Z",
 				OfficialDate: "2024-04-01",
 				Status: models.Status{
 					AbstractGameState: "Final",
-					AbstractGameCode: "F",
-					CodedGameState: "F",
-					DetailedState: "Final",
-					StatusCode: "F",
-					StartTimeTBD: false,
+					AbstractGameCode:  "F",
+					CodedGameState:    "F",
+					DetailedState:     "Final",
+					StatusCode:        "F",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "S",
 			}
 
 			game2 := models.Game{
-				GameDate: "2023-04-01T23:00:00Z",
+				GameDate:     "2023-04-01T23:00:00Z",
 				OfficialDate: "2023-04-01",
 				Status: models.Status{
 					AbstractGameState: "Final",
-					AbstractGameCode: "F",
-					CodedGameState: "F",
-					DetailedState: "Final",
-					StatusCode: "F",
-					StartTimeTBD: false,
+					AbstractGameCode:  "F",
+					CodedGameState:    "F",
+					DetailedState:     "Final",
+					StatusCode:        "F",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "S",
 			}
-            It("the games should be chronologically ordered", func(ctx SpecContext) {
+			It("the games should be chronologically ordered", func(ctx SpecContext) {
 				sorted, err := sortDoubleHeaders([]models.Game{game2, game1})
 				Expect(err).To(BeNil())
 				Expect(sorted[0]).To(Equal(game1))
 				Expect(sorted[1]).To(Equal(game2))
-            })
-        })
+			})
+		})
 
-        Context("the first game is live", func() {
+		Context("the first game is live", func() {
 			game1 := models.Game{
-				GameDate: "2023-04-01T20:00:00Z",
+				GameDate:     "2023-04-01T20:00:00Z",
 				OfficialDate: "2024-04-01",
 				Status: models.Status{
 					AbstractGameState: "Live",
-					AbstractGameCode: "L",
-					CodedGameState: "L",
-					DetailedState: "Live",
-					StatusCode: "L",
-					StartTimeTBD: false,
+					AbstractGameCode:  "L",
+					CodedGameState:    "L",
+					DetailedState:     "Live",
+					StatusCode:        "L",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "S",
 			}
 
 			game2 := models.Game{
-				GameDate: "2023-04-01T23:00:00Z",
+				GameDate:     "2023-04-01T23:00:00Z",
 				OfficialDate: "2023-04-01",
 				Status: models.Status{
 					AbstractGameState: "Preview",
-					AbstractGameCode: "P",
-					CodedGameState: "S",
-					DetailedState: "Scheduled",
-					StatusCode: "S",
-					StartTimeTBD: false,
+					AbstractGameCode:  "P",
+					CodedGameState:    "S",
+					DetailedState:     "Scheduled",
+					StatusCode:        "S",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "S",
 			}
-            It("the games should be chronologically ordered", func(ctx SpecContext) {
+			It("the games should be chronologically ordered", func(ctx SpecContext) {
 				sorted, err := sortDoubleHeaders([]models.Game{game2, game1})
 				Expect(err).To(BeNil())
 				Expect(sorted[0]).To(Equal(game1))
 				Expect(sorted[1]).To(Equal(game2))
-            })
-        })
+			})
+		})
 
 		Context("and the second game is live", func() {
 			game1 := models.Game{
-				GameDate: "2024-04-01T20:00:00Z",
+				GameDate:     "2024-04-01T20:00:00Z",
 				OfficialDate: "2024-04-01",
 				Status: models.Status{
 					AbstractGameState: "Final",
-					AbstractGameCode: "F",
-					CodedGameState: "F",
-					DetailedState: "Final",
-					StatusCode: "F",
-					StartTimeTBD: false,
+					AbstractGameCode:  "F",
+					CodedGameState:    "F",
+					DetailedState:     "Final",
+					StatusCode:        "F",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "S",
 			}
 
 			game2 := models.Game{
-				GameDate: "2023-04-01T23:00:00Z",
+				GameDate:     "2023-04-01T23:00:00Z",
 				OfficialDate: "2024-04-01",
 				Status: models.Status{
 					AbstractGameState: "Live",
-					AbstractGameCode: "L",
-					CodedGameState: "L",
-					DetailedState: "Live",
-					StatusCode: "L",
-					StartTimeTBD: false,
+					AbstractGameCode:  "L",
+					CodedGameState:    "L",
+					DetailedState:     "Live",
+					StatusCode:        "L",
+					StartTimeTBD:      false,
 				},
 				Teams: models.Teams{
 					Away: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 0,
+							ID:   0,
 							Name: "testTeamAway",
 						},
 					},
 					Home: models.ScheduleTeam{
 						Team: models.Team{
-							ID: 1,
+							ID:   1,
 							Name: "testTeamHome",
-						},	
+						},
 					},
 				},
 				DoubleHeader: "S",
 			}
 
-            It("the second, live, game should be listed first", func(ctx SpecContext) {
+			It("the second, live, game should be listed first", func(ctx SpecContext) {
 				sorted, err := sortDoubleHeaders([]models.Game{game1, game2})
 				Expect(err).To(BeNil())
 				Expect(sorted[0]).To(Equal(game2))
 				Expect(sorted[1]).To(Equal(game1))
-            })
-        })
+			})
+		})
 	})
 })
