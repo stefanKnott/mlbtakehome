@@ -96,11 +96,16 @@ type Date struct {
 	Games                []Game `json:"games"`
 }
 
+type Event struct {
+	// ?
+}
+
 type ScheduleResponse struct {
-	Copyright            string `json:"copyright"`
-	TotalItems           uint8  `json:"totalItems"`
-	TotalEvents          uint8  `json:"totalEvents"`
-	TotalGames           uint8  `json:"totalGames"`
-	TotalGamesInProgress uint8  `json:"totalGamesInProgress"`
-	Dates                []Date `json:"dates"`
+	Copyright            string  `json:"copyright"`
+	TotalItems           uint8   `json:"totalItems"`
+	TotalEvents          uint8   `json:"totalEvents"`
+	TotalGames           uint8   `json:"totalGames"`
+	TotalGamesInProgress uint8   `json:"totalGamesInProgress"`
+	Dates                []Date  `json:"dates"`
+	Events               []Event `json:"events"`
 }

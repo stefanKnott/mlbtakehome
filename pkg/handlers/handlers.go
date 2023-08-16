@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -24,18 +23,20 @@ const (
 )
 
 // structs for /schedule API responses
-type ScheduleResponse struct{
-	models.ScheduleResponse 
+type ScheduleResponse struct {
+	models.ScheduleResponse
 }
 
-type ScheduleErrorResponse struct{
-	Message string `json:"message"`
+type ScheduleErrorResponse struct {
+	Message   string `json:"message"`
 	Timestamp string `json:"timestamp"`
 }
 
 func createTeamsSet(teamsResp models.TeamsResponse) {
 	setLock.Lock()
 	teamSet = make(map[int]string)
+	teamSet[159] = "American League All-Stars"
+	teamSet[160] = "National League All-Stars"
 	for _, team := range teamsResp.Teams {
 		teamSet[team.ID] = team.Name
 	}
@@ -80,11 +81,6 @@ func InitTeamIdSet() {
 			<-ticker.C
 		}
 	}()
-}
-
-// sanitize casing
-func isNotMyTeam(myTeam, team string) bool {
-	return strings.ToLower(myTeam) != strings.ToLower(team)
 }
 
 func sortDoubleHeaders(games []models.Game) ([]models.Game, error) {
@@ -132,32 +128,32 @@ func sortDoubleHeaders(games []models.Game) ([]models.Game, error) {
 	return []models.Game{chronoFirst, chronoSecond}, nil
 }
 
-func parseQueryParameters(id int, date string) (string, error) {
+func validateQueryParameters(id int, date string) error {
 	// validate requested team ID exists
 	setLock.RLock()
 	myTeam := teamSet[id]
 	setLock.RUnlock()
 
 	if myTeam == "" {
-		return "", errors.New("team not found")
+		return  errors.New("team not found")
 	}
 
 	// validate timestamp
 	_, err := time.Parse("2006-01-02", date)
 	if err != nil {
-		return "", errors.New("invalid date string")
+		return errors.New("invalid date string")
 	}
 
-	return myTeam, nil
+	return  nil
 }
 
 // give a slice of games, filter out all games that myTeam is either home or away
 // return two standalone slices representing myTeamsGames and all other games
-func filterTeam(myTeam string, games []models.Game) (myTeamsGames []models.Game, otherTeamsGames []models.Game) {
+func filterTeam(id int, games []models.Game) (myTeamsGames []models.Game, otherTeamsGames []models.Game) {
 	i := 0
 	for _, x := range games {
 		// ensure neither home nor away team is myTeam
-		if isNotMyTeam(myTeam, x.Teams.Home.Team.Name) && isNotMyTeam(myTeam, x.Teams.Away.Team.Name) {
+		if id != x.Teams.Home.Team.ID && id != x.Teams.Away.Team.ID {
 			games[i] = x
 			i++
 			continue
@@ -174,7 +170,6 @@ func filterTeam(myTeam string, games []models.Game) (myTeamsGames []models.Game,
 // which allows a client to receive a list ofgames scheduled for a specific date
 // with the requested team's games ordered first
 func GetSchedule(c *gin.Context) {
-	var myTeam string
 	date := c.Query("date")
 	teamId := c.Query("teamId")
 	id, err := strconv.Atoi(teamId)
@@ -183,7 +178,7 @@ func GetSchedule(c *gin.Context) {
 		return
 	}
 
-	myTeam, err = parseQueryParameters(id, date)
+	err = validateQueryParameters(id, date)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ScheduleErrorResponse{Message: err.Error(), Timestamp: time.Now().UTC().String()})
 		return
@@ -217,7 +212,7 @@ func GetSchedule(c *gin.Context) {
 
 	myTeamsGames := make([]models.Game, 0)
 	// filter myTeam games out of schedule response payload into standalone slices
-	myTeamsGames, schedResp.Dates[0].Games = filterTeam(myTeam, schedResp.Dates[0].Games)
+	myTeamsGames, schedResp.Dates[0].Games = filterTeam(id, schedResp.Dates[0].Games)
 
 	// build ordered response payload
 	tmp := schedResp.Dates[0].Games
@@ -233,6 +228,7 @@ func GetSchedule(c *gin.Context) {
 		schedResp.Dates[0].Games = append(schedResp.Dates[0].Games, myTeamsGames...)
 	}
 	schedResp.Dates[0].Games = append(schedResp.Dates[0].Games, tmp...)
-
+	// pass thru empty events until we find the object definition
+	schedResp.Events = make([]models.Event, 0)
 	c.JSON(http.StatusOK, ScheduleResponse{schedResp})
 }

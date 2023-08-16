@@ -1442,21 +1442,20 @@ var _ = Describe("Processing Schedule requests", Label("Schedule"), func() {
 	When("We parse /schedule query parameters", func() {
 		Context("and we receive a teamId that does not exist", func() {
 			It("should return an error", func(ctx SpecContext) {
-				_, err := parseQueryParameters(-1, "2021-04-01")
+				err := validateQueryParameters(-1, "2021-04-01")
 				Expect(err).ToNot(BeNil())
 			})
 		})
 		Context("and we receive an invalid timestamp", func() {
 			It("should return an error", func(ctx SpecContext) {
-				_, err := parseQueryParameters(141, "2021-04-q01")
+				err := validateQueryParameters(141, "2021-04-q01")
 				Expect(err).ToNot(BeNil())
 			})
 		})
 		Context("and we receive valid query parameters", func() {
 			It("should return a valid team name", func(ctx SpecContext) {
-				team, err := parseQueryParameters(141, "2021-04-01")
+				err := validateQueryParameters(141, "2021-04-01")
 				Expect(err).To(BeNil())
-				Expect(team).To(Equal("Toronto Blue Jays"))
 			})
 		})
 	})
@@ -1970,6 +1969,72 @@ var _ = Describe("Processing Schedule requests", Label("Schedule"), func() {
 				Expect(err).To(BeNil())
 				Expect(sorted[0]).To(Equal(game2))
 				Expect(sorted[1]).To(Equal(game1))
+			})
+		})			
+	})
+
+	When("We filter a Games slice", func() {
+		Context("by a specified team", func() {
+			game1 := models.Game{
+				GameDate:     "2024-04-01T20:00:00Z",
+				OfficialDate: "2024-04-01",
+				Status: models.Status{
+					AbstractGameState: "Final",
+					AbstractGameCode:  "F",
+					CodedGameState:    "F",
+					DetailedState:     "Final",
+					StatusCode:        "F",
+					StartTimeTBD:      false,
+				},
+				Teams: models.Teams{
+					Away: models.ScheduleTeam{
+						Team: models.Team{
+							ID:   0,
+							Name: "testTeamAway",
+						},
+					},
+					Home: models.ScheduleTeam{
+						Team: models.Team{
+							ID:   1,
+							Name: "testTeamHome",
+						},
+					},
+				},
+				DoubleHeader: "S",
+			}
+
+			game2 := models.Game{
+				GameDate:     "2023-04-01T23:00:00Z",
+				OfficialDate: "2024-04-01",
+				Status: models.Status{
+					AbstractGameState: "Live",
+					AbstractGameCode:  "L",
+					CodedGameState:    "L",
+					DetailedState:     "Live",
+					StatusCode:        "L",
+					StartTimeTBD:      false,
+				},
+				Teams: models.Teams{
+					Away: models.ScheduleTeam{
+						Team: models.Team{
+							ID:   3,
+							Name: "testTeamAway2",
+						},
+					},
+					Home: models.ScheduleTeam{
+						Team: models.Team{
+							ID:   1,
+							Name: "testTeamHome",
+						},
+					},
+				},
+				DoubleHeader: "S",
+			}
+
+			It("the returned slices should represent games of a specified team, and all other games", func(ctx SpecContext) {
+				myTeamsGames, otherTeamsGames := filterTeam(0, []models.Game{game1, game2})
+				Expect(myTeamsGames[0]).To(Equal(game1))
+				Expect(otherTeamsGames[0]).To(Equal(game2))
 			})
 		})
 	})
